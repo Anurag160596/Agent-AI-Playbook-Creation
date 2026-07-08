@@ -1,0 +1,36 @@
+CARD SERVICES — STANDARD OPERATING PROCEDURE
+Document: SOP-CS-014  |  Owner: Fraud & Disputes  |  Last reviewed: 2026-01-30
+
+Purpose
+This procedure covers how a contact centre agent handles a customer request to
+block a debit or credit card that has been lost, stolen, or compromised.
+
+Procedure
+1. Before taking any action on the account, the agent must verify the identity of
+   the caller. Verification requires the customer to correctly provide at least
+   two of: full name, date of birth, and the last four digits of the card. If the
+   customer cannot be verified, the agent must NOT proceed and should follow the
+   failed-verification escalation process.
+
+2. Once the customer is verified, ask the customer for the reason they want the
+   card blocked (for example: lost, stolen, or suspected fraud). Record the reason
+   in the case notes.
+
+3. A one-time passcode (OTP) is sent to the mobile number on file. The agent must
+   ask the customer to read back the OTP and must confirm it matches before any
+   block is placed. This step is mandatory and cannot be skipped for any reason.
+
+4. After the OTP is confirmed, the agent places the block on the card in the card
+   management system. The block is immediate and irreversible.
+
+5. Ask the customer whether they would like a replacement card issued to the
+   address on file. If yes, raise a replacement-card request and inform them that
+   the new card arrives in 5–7 business days. If no, no further action is needed.
+
+6. Finally, inform the customer that the block is now active and read the standard
+   fraud-liability disclosure to them before ending the call.
+
+Notes
+- Identity verification (step 1) and OTP confirmation (step 3) are regulatory
+  requirements and are audited monthly. A block placed without a confirmed OTP is
+  a reportable compliance breach.

@@ -1,0 +1,137 @@
+{
+  "intent": "block_card",
+  "title": "Block a lost, stolen, or compromised card",
+  "description": "Handles a customer request to block a debit or credit card, with mandatory identity verification and OTP confirmation before the block is placed.",
+  "metadata": {
+    "source_document": "SOP-CS-014",
+    "regulated": true,
+    "version": "0.1.0",
+    "generated_by": "offline-demo"
+  },
+  "entry_step_id": "verify_identity",
+  "steps": [
+    {
+      "id": "verify_identity",
+      "type": "verify",
+      "title": "Verify customer identity",
+      "agent_prompt": "Verify the caller before doing anything on the account. Ask for at least two of: full name, date of birth, last four digits of the card. If they cannot be verified, do not proceed.",
+      "required": true,
+      "compliance_tag": "KYC",
+      "preconditions": [],
+      "next": "collect_reason",
+      "branches": [],
+      "source_citation": {
+        "quote": "Before taking any action on the account, the agent must verify the identity of the caller. Verification requires the customer to correctly provide at least two of: full name, date of birth, and the last four digits of the card.",
+        "location": "step 1"
+      }
+    },
+    {
+      "id": "verification_failed_escalation",
+      "type": "escalate",
+      "title": "Failed-verification escalation",
+      "agent_prompt": "If the customer cannot be verified, do not proceed. Follow the failed-verification escalation process and hand off.",
+      "required": false,
+      "compliance_tag": "KYC",
+      "preconditions": [],
+      "next": null,
+      "branches": [],
+      "source_citation": {
+        "quote": "If the customer cannot be verified, the agent must NOT proceed and should follow the failed-verification escalation process.",
+        "location": "step 1"
+      }
+    },
+    {
+      "id": "collect_reason",
+      "type": "collect",
+      "title": "Collect reason for blocking",
+      "agent_prompt": "Ask the customer why they want the card blocked (lost, stolen, or suspected fraud) and record it in the case notes.",
+      "required": true,
+      "compliance_tag": null,
+      "preconditions": ["verify_identity"],
+      "next": "confirm_otp",
+      "branches": [],
+      "source_citation": {
+        "quote": "Once the customer is verified, ask the customer for the reason they want the card blocked ... Record the reason in the case notes.",
+        "location": "step 2"
+      }
+    },
+    {
+      "id": "confirm_otp",
+      "type": "confirm",
+      "title": "Confirm one-time passcode (OTP)",
+      "agent_prompt": "An OTP is sent to the mobile number on file. Ask the customer to read it back and confirm it matches. This is mandatory and cannot be skipped.",
+      "required": true,
+      "compliance_tag": "OTP-2FA",
+      "preconditions": ["verify_identity"],
+      "next": "place_block",
+      "branches": [],
+      "source_citation": {
+        "quote": "The agent must ask the customer to read back the OTP and must confirm it matches before any block is placed. This step is mandatory and cannot be skipped for any reason.",
+        "location": "step 3"
+      }
+    },
+    {
+      "id": "place_block",
+      "type": "action",
+      "title": "Place block on the card",
+      "agent_prompt": "In the card management system, place the block on the card. The block is immediate and irreversible.",
+      "required": true,
+      "compliance_tag": null,
+      "preconditions": ["verify_identity", "confirm_otp"],
+      "next": "offer_replacement",
+      "branches": [],
+      "source_citation": {
+        "quote": "After the OTP is confirmed, the agent places the block on the card in the card management system. The block is immediate and irreversible.",
+        "location": "step 4"
+      }
+    },
+    {
+      "id": "offer_replacement",
+      "type": "branch",
+      "title": "Offer a replacement card",
+      "agent_prompt": "Ask the customer whether they would like a replacement card issued to the address on file.",
+      "required": true,
+      "compliance_tag": null,
+      "preconditions": ["place_block"],
+      "next": null,
+      "branches": [
+        { "condition": "customer wants a replacement card", "next_step_id": "raise_replacement" },
+        { "condition": "customer does not want a replacement card", "next_step_id": "inform_block_active" }
+      ],
+      "source_citation": {
+        "quote": "Ask the customer whether they would like a replacement card issued to the address on file.",
+        "location": "step 5"
+      }
+    },
+    {
+      "id": "raise_replacement",
+      "type": "action",
+      "title": "Raise replacement-card request",
+      "agent_prompt": "Raise a replacement-card request and inform the customer the new card arrives in 5-7 business days.",
+      "required": false,
+      "compliance_tag": null,
+      "preconditions": ["offer_replacement"],
+      "next": "inform_block_active",
+      "branches": [],
+      "source_citation": {
+        "quote": "If yes, raise a replacement-card request and inform them that the new card arrives in 5-7 business days.",
+        "location": "step 5"
+      }
+    },
+    {
+      "id": "inform_block_active",
+      "type": "inform",
+      "title": "Inform block is active and read disclosure",
+      "agent_prompt": "Inform the customer that the block is now active and read the standard fraud-liability disclosure before ending the call.",
+      "required": true,
+      "compliance_tag": "DISCLOSURE",
+      "preconditions": ["place_block"],
+      "next": null,
+      "branches": [],
+      "source_citation": {
+        "quote": "Inform the customer that the block is now active and read the standard fraud-liability disclosure to them before ending the call.",
+        "location": "step 6"
+      }
+    }
+  ]
+}
