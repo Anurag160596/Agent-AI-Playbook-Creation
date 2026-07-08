@@ -36,6 +36,8 @@ prior knowledge and build up to interview-ready fluency:
    likely interview questions + strong answers.
 5. [`docs/05-competitive-landscape.md`](docs/05-competitive-landscape.md) — the
    market and how to talk about it.
+6. [`docs/06-evaluation-and-the-runtime-agent.md`](docs/06-evaluation-and-the-runtime-agent.md)
+   — how to *evaluate* the product, and how the run-time agent + guardrail work.
 
 ---
 
@@ -61,7 +63,11 @@ an auditor.
 | `playbook_forge/extractor.py` | AI step: SOP text → structured playbook (Claude, schema-enforced). |
 | `playbook_forge/validator.py` | Deterministic compliance + structural checks (incl. gate-ordering proof). |
 | `playbook_forge/renderer.py` | Playbook → human-review Markdown + Mermaid flow diagram. |
-| `playbook_forge/cli.py` | Runs the whole pipeline from one command. |
+| `playbook_forge/cli.py` | Runs the whole design-time pipeline from one command. |
+| `playbook_forge/engine.py` | **Run-time guardrail:** enforces gate ordering during a live conversation. |
+| `playbook_forge/agent.py` | The agent: an LLM decision-maker (live) + scripted policies for evaluation. |
+| `playbook_forge/simulator.py` | Drives simulated conversations through the engine and scores them. |
+| `playbook_forge/evaluate.py` | The evaluation harness (extraction quality + behavioural safety). |
 | `examples/` | A realistic messy SOP + its structured playbook. |
 | `tests/` | Proves the pipeline works *and* that the safety net catches breaches. |
 
@@ -84,10 +90,22 @@ export ANTHROPIC_API_KEY=sk-ant-...
 python -m playbook_forge.cli path/to/your_sop.txt --out build/
 ```
 
-Run the tests (includes the flagship "dropped OTP gate is caught" test):
+Evaluate it — extraction quality **and** run-time safety (offline, no key):
 
 ```bash
-PYTHONPATH=. python tests/test_pipeline.py     # or: python -m pytest -q
+python -m playbook_forge.evaluate
+```
+
+This drives simulated conversations through the playbook, including an
+**adversarial agent that tries to skip the OTP** — and shows the engine blocking
+it while the conversation still finishes safely.
+
+Run the tests (includes the flagship "dropped OTP gate is caught" checks):
+
+```bash
+PYTHONPATH=. python tests/test_pipeline.py     # design-time checks
+PYTHONPATH=. python tests/test_engine.py       # run-time guardrail checks
+# or, if pytest is installed:  python -m pytest -q
 ```
 
 ---
