@@ -127,6 +127,16 @@ The defensible part is **not** "we use AI" — it's the domain-specific schema, 
 verifiable compliance checks, and the human-review workflow that make the output
 trustworthy in regulated settings.
 
+> **Reality check from market research (see doc 05):** auto-generating playbooks
+> from SOPs is *already shipping* at Kore.ai, Cresta, Genesys, Decagon, Sierra, and
+> Ada — it's table stakes, not a wedge. On the closest match (Kore.ai) the docs
+> show **no** compliance gate-validation and **no** source citations. So the honest,
+> strong answer is: *"Generation is commoditised; the unmet need is provable
+> compliance of the generated playbook — citations, gate-ordering proofs, and
+> adversarial verification — which is the part incumbents underinvest in and the
+> part I built."* Showing you researched the market and **revised your thesis** when
+> evidence contradicted it is itself a strong PM signal.
+
 ---
 
 ## Q8. Traps and good habits
