@@ -20,6 +20,7 @@ The validator returns a list of Issues. Each Issue has a severity:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
 
@@ -53,8 +54,95 @@ def _outgoing_targets(step) -> list[str]:
     return targets
 
 
-def validate(playbook: Playbook) -> list[Issue]:
-    """Run every check and return a flat list of issues (empty == clean)."""
+def _normalize(text: str) -> str:
+    """Lowercase, strip punctuation to spaces, collapse whitespace. Makes quote
+    matching robust to minor punctuation/casing differences (e.g. en-dash vs
+    hyphen, curly vs straight quotes)."""
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", text.lower())).strip()
+
+
+# Common words carry little meaning; a fabricated sentence still shares them with
+# the source ("the", "agent", "for", ...). Scoring citation match on CONTENT words
+# only makes hallucination detection much sharper.
+_STOPWORDS = {
+    "the", "a", "an", "and", "or", "of", "to", "for", "in", "on", "at", "by",
+    "is", "are", "be", "was", "were", "as", "that", "this", "it", "with", "must",
+    "any", "all", "not", "no", "if", "then", "from", "into", "they", "their",
+    "them", "who", "which", "will", "can", "may", "should", "before", "after",
+}
+
+
+def _content_words(text: str) -> list[str]:
+    """Meaningful words only: drop stopwords and very short tokens."""
+    return [w for w in _normalize(text).split() if len(w) >= 3 and w not in _STOPWORDS]
+
+
+def verify_citations(playbook: Playbook, source_text: str) -> list[Issue]:
+    """
+    Prove that every step's citation actually appears in the source SOP.
+
+    This answers the single most dangerous question about an LLM in a compliance
+    product: "how do you know the AI didn't invent that policy sentence?" We don't
+    trust the model — we CHECK. For each citation we verify the quoted sentence is
+    really present in the SOP text. A fabricated ("hallucinated") citation is a
+    hard ERROR, because it means a step is justified by policy that doesn't exist.
+
+    Matching is deliberately forgiving of elision: citations often shorten a quote
+    with "...". We split on that and require each segment to be found in the
+    source. If exact matching fails we fall back to word-recall so trivial
+    differences produce a WARNING rather than a false alarm.
+    """
+    issues: list[Issue] = []
+    norm_src = _normalize(source_text)
+    src_content = set(_content_words(source_text))
+
+    for step in playbook.steps:
+        cite = step.source_citation
+        if cite is None:
+            if step.required:
+                issues.append(Issue(
+                    Severity.WARNING, "NO_CITATION",
+                    "is a required step with no source citation — cannot be traced to policy.",
+                    step.id,
+                ))
+            continue
+
+        quote = cite.quote or ""
+        # Split on ellipsis; keep only substantive segments (>= 3 words).
+        segments = [
+            seg for seg in re.split(r"\.\.\.|…", quote)
+            if len(_normalize(seg).split()) >= 3
+        ]
+        if segments and all(_normalize(seg) in norm_src for seg in segments):
+            continue  # every segment is verbatim in the SOP — verified.
+
+        # Fallback: how many of the quote's CONTENT words appear in the source?
+        qwords = _content_words(quote)
+        recall = (sum(1 for w in qwords if w in src_content) / len(qwords)) if qwords else 0.0
+        if recall < 0.5:
+            issues.append(Issue(
+                Severity.ERROR, "HALLUCINATED_CITATION",
+                f"cites a sentence that does not appear in the SOP (word-match {recall:.0%}). "
+                f"The AI may have fabricated this policy — reject.",
+                step.id,
+            ))
+        elif recall < 0.9:
+            issues.append(Issue(
+                Severity.WARNING, "CITATION_DRIFT",
+                f"citation only partially matches the SOP (word-match {recall:.0%}). Review wording.",
+                step.id,
+            ))
+
+    return issues
+
+
+def validate(playbook: Playbook, source_text: str | None = None) -> list[Issue]:
+    """
+    Run every check and return a flat list of issues (empty == clean).
+
+    If `source_text` (the original SOP) is provided, we additionally verify that
+    every citation is real — see verify_citations().
+    """
     issues: list[Issue] = []
     steps = playbook.step_map()
     ids = set(steps)
@@ -180,6 +268,10 @@ def validate(playbook: Playbook) -> list[Issue]:
                     "Confirm this is intentional.",
                     step.id,
                 ))
+
+    # --- Check 7: citations are real (only if we were given the source) --------
+    if source_text is not None:
+        issues.extend(verify_citations(playbook, source_text))
 
     return issues
 

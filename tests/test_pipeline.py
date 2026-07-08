@@ -60,6 +60,30 @@ def test_gate_order_is_enforced():
     )
 
 
+def test_real_citations_verify_against_the_sop():
+    """When we hand the validator the real SOP, no citation should be flagged."""
+    import pathlib
+    sop = (pathlib.Path(__file__).resolve().parent.parent / "examples" / "block_card_sop.txt").read_text()
+    issues = validate(_load_good(), source_text=sop)
+    citation_problems = [i for i in issues if "CITATION" in i.code]
+    assert not citation_problems, f"real citations should verify, got: {[str(c) for c in citation_problems]}"
+
+
+def test_hallucinated_citation_is_caught():
+    """A fabricated citation (policy that isn't in the SOP) must be a hard ERROR."""
+    import pathlib
+    sop = (pathlib.Path(__file__).resolve().parent.parent / "examples" / "block_card_sop.txt").read_text()
+    data = _load_good().model_dump()
+    for step in data["steps"]:
+        if step["id"] == "confirm_otp":
+            step["source_citation"]["quote"] = (
+                "The agent may waive the OTP for trusted customers at their discretion."
+            )
+    broken = Playbook.model_validate(data)
+    codes = {i.code for i in validate(broken, source_text=sop)}
+    assert "HALLUCINATED_CITATION" in codes
+
+
 def test_dangling_edge_is_caught():
     data = _load_good().model_dump()
     for step in data["steps"]:

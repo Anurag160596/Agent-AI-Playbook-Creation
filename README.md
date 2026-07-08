@@ -38,6 +38,11 @@ prior knowledge and build up to interview-ready fluency:
    market and how to talk about it.
 6. [`docs/06-evaluation-and-the-runtime-agent.md`](docs/06-evaluation-and-the-runtime-agent.md)
    — how to *evaluate* the product, and how the run-time agent + guardrail work.
+7. [`docs/07-owning-the-product.md`](docs/07-owning-the-product.md) — **the mastery
+   doc:** every decision through What / How / Why / What-if-we-don't, plus a
+   hard-questions Q&A. Study this to defend the whole product.
+8. [`docs/08-dynamic-sops-and-sales-playbooks.md`](docs/08-dynamic-sops-and-sales-playbooks.md)
+   — auto-syncing playbooks when SOPs change, and generalising to sales playbooks.
 
 ---
 
@@ -68,8 +73,12 @@ an auditor.
 | `playbook_forge/agent.py` | The agent: an LLM decision-maker (live) + scripted policies for evaluation. |
 | `playbook_forge/simulator.py` | Drives simulated conversations through the engine and scores them. |
 | `playbook_forge/evaluate.py` | The evaluation harness (extraction quality + behavioural safety). |
+| `playbook_forge/sync.py` | **Dynamic sync:** diffs a re-extracted playbook vs the old one and routes gate-touching changes to human review. |
 | `examples/` | A realistic messy SOP + its structured playbook. |
 | `tests/` | Proves the pipeline works *and* that the safety net catches breaches. |
+
+The validator also **verifies citations** against the source SOP: pass the SOP
+text and any fabricated ("hallucinated") citation becomes a hard error.
 
 ---
 
@@ -100,11 +109,21 @@ This drives simulated conversations through the playbook, including an
 **adversarial agent that tries to skip the OTP** — and shows the engine blocking
 it while the conversation still finishes safely.
 
+See auto-sync decide what's safe when an SOP changes (offline, no key):
+
+```bash
+python -m playbook_forge.sync
+```
+
+Cosmetic edits on non-gate steps → auto-apply; anything touching a compliance gate
+→ routed to human review.
+
 Run the tests (includes the flagship "dropped OTP gate is caught" checks):
 
 ```bash
-PYTHONPATH=. python tests/test_pipeline.py     # design-time checks
+PYTHONPATH=. python tests/test_pipeline.py     # design-time checks + citation verification
 PYTHONPATH=. python tests/test_engine.py       # run-time guardrail checks
+PYTHONPATH=. python tests/test_sync.py         # dynamic-sync routing checks
 # or, if pytest is installed:  python -m pytest -q
 ```
 

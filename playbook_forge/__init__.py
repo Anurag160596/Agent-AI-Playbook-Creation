@@ -12,5 +12,7 @@ from playbook_forge.renderer import to_markdown, to_mermaid  # noqa: F401
 from playbook_forge.engine import Engine, RunState, ActionResult  # noqa: F401
 from playbook_forge.agent import CompliantPolicy, AdversarialPolicy  # noqa: F401
 from playbook_forge.simulator import run_scenario, RunReport  # noqa: F401
+from playbook_forge.sync import diff_playbooks, PlaybookDiff, StepChange  # noqa: F401
+from playbook_forge.validator import verify_citations  # noqa: F401
 
 __version__ = "0.1.0"

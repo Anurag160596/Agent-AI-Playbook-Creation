@@ -45,8 +45,8 @@ def main(argv: list[str] | None = None) -> int:
     playbook = extract_playbook(sop_text, source_name=sop_path.stem, use_ai=not args.no_ai)
     print(f"  got '{playbook.intent}' with {len(playbook.steps)} steps")
 
-    # --- 3: validate ----------------------------------------------------------
-    issues = validate(playbook)
+    # --- 3: validate (pass the SOP text so citations are verified against it) --
+    issues = validate(playbook, source_text=sop_text)
     print(f"\n→ Validation: {summarize(issues)}")
     for issue in issues:
         print(f"   {issue}")
