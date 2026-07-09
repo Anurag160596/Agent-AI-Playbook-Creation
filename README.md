@@ -43,6 +43,9 @@ prior knowledge and build up to interview-ready fluency:
    hard-questions Q&A. Study this to defend the whole product.
 8. [`docs/08-dynamic-sops-and-sales-playbooks.md`](docs/08-dynamic-sops-and-sales-playbooks.md)
    — auto-syncing playbooks when SOPs change, and generalising to sales playbooks.
+9. [`docs/09-become-an-ai-pm.md`](docs/09-become-an-ai-pm.md) — **the curriculum:**
+   a 10-module course that uses this whole project to teach you to be an AI PM,
+   with hands-on exercises and a 2-week study plan.
 
 ---
 
